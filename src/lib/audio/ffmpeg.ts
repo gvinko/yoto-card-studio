@@ -2,7 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 
 /** Single-threaded core: no COOP/COEP headers needed, runs on Android Chrome. Cached by sw.js after first load. */
-const CORE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+const CORE = new URL('/ffmpeg', location.origin).href;
 
 let instance: FFmpeg | null = null;
 let loading: Promise<FFmpeg> | null = null;

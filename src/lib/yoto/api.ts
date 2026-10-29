@@ -1,5 +1,6 @@
 // Yoto Developer API: https://yoto.dev/myo/uploading-to-cards , https://yoto.dev/icons/uploading-icons
 import { API, getAccessToken } from './auth';
+import { YOTO_LIMITS } from '../../types';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -9,7 +10,7 @@ async function authed(path: string, init: RequestInit = {}): Promise<Response> {
     ...init,
     headers: { Accept: 'application/json', ...(init.headers as Record<string, string>), Authorization: `Bearer ${token}` },
   });
-  if (!r.ok) throw new Error(`Yoto API ${r.status} on ${path}: ${(await r.text()).slice(0, 300)}`);
+  if (!r.ok) throw new Error(`Yoto API request failed (${r.status}). Check your permission and try again.`);
   return r;
 }
 
@@ -80,6 +81,11 @@ export interface PlaylistTrack {
 
 /** Creates a playlist, or replaces the content of `cardId` when given. One chapter per track, matching the Yoto app's MYO layout. */
 export async function savePlaylist(title: string, tracks: PlaylistTrack[], cardId?: string) {
+  if (cardId) throw new Error('Protected: only new playlists can be created; replacement is disabled.');
+  if (!tracks.length || tracks.length > YOTO_LIMITS.tracks) throw new Error('Yoto track count limit exceeded.');
+  const info = tracks.map(t=>t.audio.transcodedInfo);
+  if (info.some(i=>!i || !Number.isFinite(i.duration) || !Number.isFinite(i.fileSize) || i.duration! <= 0 || i.fileSize! <= 0)) throw new Error('Yoto did not report duration and size. Cannot verify card limits.');
+  if (info.some(i=>i!.duration! > YOTO_LIMITS.trackSeconds || i!.fileSize! > YOTO_LIMITS.trackBytes) || info.reduce((s,i)=>s+i!.duration!,0) > YOTO_LIMITS.cardSeconds || info.reduce((s,i)=>s+i!.fileSize!,0) > YOTO_LIMITS.cardBytes) throw new Error('Yoto size or duration limit exceeded. Split the audio before uploading.');
   const key = (i: number) => String(i + 1).padStart(2, '0');
   const chapters = tracks.map((t, i) => {
     const info = t.audio.transcodedInfo ?? {};

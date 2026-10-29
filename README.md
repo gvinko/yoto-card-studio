@@ -1,86 +1,47 @@
-# Yoto Card Studio
+# Yoto Card Studio — Evie's family library
 
-Personal PWA for prepping audio for Yoto **Make Your Own** cards: import → chapter → 16×16 icons → export or upload to Yoto via the official API. Runs on the laptop and on Android Chrome. No backend, no cost.
+React 19 / TypeScript / Vite audio library and Make Your Own card studio. Free and open source dependencies; no new paid subscription required.
 
-```
-src/
-  App.tsx                      shell + tabs (bottom nav on phone, sidebar on desktop)
-  types.ts                     Project / Track / Output + Yoto MYO limits
-  components/
-    IngestPanel.tsx            drag-drop / file picker + "From a link" ripper UI
-    ChapterStudio.tsx          WaveSurfer waveform, markers, silence detect, chapter list
-    IconEditor.tsx             16×16 pixel editor, PNG import/export, per-track icons
-    ExportPanel.tsx            build tracks (ffmpeg.wasm), ZIP, send to Yoto
-    NfcPanel.tsx               Web NFC read / guarded write / wipe
-    SettingsPanel.tsx          Yoto client ID, helper URL + token
-  lib/
-    audio/ffmpeg.ts            ffmpeg.wasm: probe, chapters, silence, peaks, split/encode (WORKERFS, no copies)
-    yoto/auth.ts               PKCE sign-in (popup), token refresh
-    yoto/api.ts                audio upload → transcode poll → icon upload → create/replace playlist
-    nfc/webnfc.ts              NDEFReader wrapper, Yoto-card guard, size estimate
-    helper.ts                  client for the laptop rip helper
-    icons.ts                   16-colour palette, quantise, flood fill, PNG encode
-    time.ts                    timecodes, segment maths, filenames
-helper/server.mjs              yt-dlp/ffmpeg wrapper, zero dependencies
-public/                        manifest, service worker (caches the 30 MB ffmpeg core after first use)
+- A child listening room shows only parent-approved songs, audiobooks, family recordings, original stories and playlists, with favourites and listening activities.
+- A parent PIN unlocks imports, playlists, sharing, original story writing, microphone recordings, chapter editing, pixel icons, export, NFC and settings. The PIN protects normal navigation on one browser, not access through developer tools or an account boundary.
+- Projects automatically recover from IndexedDB. Named snapshots keep original media and icons. Library ZIP backups use checksummed media and restore atomically as new, parent-only copies.
+- FFmpeg.wasm is served from this app, loaded on demand and cached after first use. MP3/AAC stream copy and MP3 conversion remain available. WaveSurfer chapter editing and silence detection remain in the studio.
+- Yoto uses official public-client PKCE authentication and optional official MQTT player controls. Export creates new playlists only; it cannot replace existing cards. Linking to an eligible MYO card happens in the official Yoto app.
+- Android Chrome NFC reads tags and writes only empty NDEF tags with overwrite disabled. All nonempty tags are protected; wiping has been removed. NFC is unavailable on iPhone and desktop browsers.
+- Optional Audiobookshelf browsing and Home Assistant / Cast controls use a server gateway with server-held provider tokens. See [integration setup](docs/INTEGRATIONS.md). LibriVox catalogue and YouTube Music open official playback/discovery channels. URL ripping has been retired.
+
+## Run
+
+Use Node 22 or newer.
+
+```sh
+npm ci
+npm run dev
 ```
 
-## Run it
+For complete media handling use a production build (the build copies the pinned FFmpeg core into the output):
 
-```bash
-npm install
-npm run dev          # http://localhost:5173 (and your LAN IP)
-npm run build        # → dist/
+```sh
+npm run build
+npm run preview
 ```
 
-Host `dist/` anywhere static with HTTPS — Cloudflare Pages free tier: build command `npm run build`, output `dist`. Unlisted URL, nothing public about it. HTTPS is required for Web NFC, the service worker and Yoto sign-in.
+Development mode prepares the same pinned engine automatically. Generated core files are excluded from Git.
 
-## Yoto API (one-time, free)
-
-1. Sign in at https://dashboard.yoto.dev → create an app (public / browser client).
-2. Allowed callback URL = the exact URL shown in **Settings** (e.g. `https://yoto-card-studio.pages.dev/`). Add `http://localhost:5173/` too for dev.
-3. Paste the client ID into **Settings**. Scopes requested: `user:content:manage user:icons:manage offline_access`.
-4. Export → *Send to Yoto* uploads each track, waits for Yoto's transcode, uploads icons, and creates a new playlist (or replaces an existing one). Then link a blank MYO card to it in the Yoto app.
-
-MYO limits enforced in the UI: 100 tracks, 60 min / 100 MB per track, 5 h / 500 MB per card.
-
-## Link ripper (yt-dlp helper)
-
-Browsers can't run yt-dlp, so a tiny helper runs on the laptop. Install the two binaries once:
-
-| OS | Command |
-|---|---|
-| Windows | `winget install yt-dlp.yt-dlp Gyan.FFmpeg` |
-| macOS | `brew install yt-dlp ffmpeg` |
-| Linux | `pipx install yt-dlp` and `sudo apt install ffmpeg` |
-
-Keep yt-dlp current — sites break it often: `yt-dlp -U` (or `winget upgrade yt-dlp.yt-dlp` / `brew upgrade yt-dlp`).
-
-```bash
-npm run helper       # prints the token; http://localhost:8787
+```sh
+npm test
+npx playwright install --with-deps chromium webkit
+npm run test:browser
 ```
 
-Not on PATH? `YTDLP=C:\tools\yt-dlp.exe FFMPEG=C:\tools\ffmpeg.exe npm run helper`.
+Browser tests exercise desktop Chromium, an Android viewport, and iPhone-shaped WebKit. These are emulations, not physical-device certification. The optional integration gateway is tested with controlled upstream responses; real credentials and devices are required for end-to-end provider testing.
 
-- **On the laptop:** Settings → helper URL `http://localhost:8787` + token.
-- **From the phone:** the app is HTTPS, so it can't call `http://192.168…`. Use a free Cloudflare quick tunnel:
-  `cloudflared tunnel --url http://localhost:8787` (install: `winget install Cloudflare.cloudflared` / `brew install cloudflared`), paste the printed `https://….trycloudflare.com` URL + token into Settings on the phone. URL changes each run.
+## Keep family media safe
 
-Rips are async jobs (poll + download), so long audiobooks don't hit tunnel timeouts. YouTube chapters are embedded into the MP3 and show up as markers automatically. Files are deleted from the laptop an hour after the job finishes. Only rip things you have the rights to use.
+Save a snapshot from Projects, then download a library backup. Keep that ZIP outside the browser and test restoring it. Restore never replaces existing records and clears child-sharing approval. Backups contain original family media and text, without encryption; protect them as private files. They exclude settings and all credentials. Current restore limits are 1 GB total archive/expanded media, 512 MB per entry, 2 MB manifest, 2,000 records and 5,000 media references. Very large libraries should be split into smaller sets; mobile memory may be lower than those limits.
 
-## How the audio side works
+The current and previous draft are held separately. Recovery on startup does not replace the previous draft. Media stays on its current device; there is no automatic cloud sync. Storage quota, browser eviction, private mode and clearing site data can remove it. The storage-persistence request is a best-effort browser feature, not a backup. Finish recordings before closing the browser; the app saves the final recording when changing views but cannot promise crash recovery for a microphone session still in progress.
 
-- **Single file** (MP3/M4B/…) → embedded chapters become markers; otherwise one marker at 0:00. Add markers at the playhead (`M`), drag them, type exact timecodes, detect silence, or split into ≤60 min parts.
-- **Several files** (CD rip folder, MP3 set) → one track each, reorder/rename in Export.
-- **Long files (>25 min)** get their waveform from an ffmpeg peak pass (10 points/s) instead of browser decoding, which would need >10 GB for a 10-hour book.
-- **Fast mode** cuts MP3→MP3 and AAC/M4B→M4A without re-encoding (seconds even on a phone). Other formats, or Fast off, encode to MP3 128/192 kbps (wasm is single-threaded: expect ~10–30× realtime on a laptop, a few × on a phone).
-- Output: `01 - Title.mp3` with ID3 title/artist/album/track; ZIP adds `icons/NN.png` and `playlist.json`.
+The app shell and saved audio work offline after initial installation. Audio processing works offline after the engine's first successful load. Yoto authentication/upload/player commands, home services, external catalogues and some system speech voices need connectivity. Supported audio codecs and microphone formats vary by browser. Large conversions may exceed phone memory; use the Surface or another computer for long books.
 
-## NFC
-
-Web NFC = Chrome on Android only (not desktop, not USB readers). It can read UID + NDEF records, write a link/text, or wipe a tag. It **cannot** tell NTAG213 from 215/216 — the panel estimates the byte size and the write fails harmlessly if it doesn't fit. Any tag holding a Yoto URL is refused for writes; Yoto cards are linked via the Yoto app, never written here.
-
-## Deliberately not built
-
-- **CD ripping:** browsers can't read optical drives. Rip with any free ripper (e.g. fre:ac) and drop the folder in.
-- **Electron / PC/SC (ACR122U):** everything above works without it; would add a native toolchain for little gain.
+See [release and rollback notes](docs/RELEASE.md) for verification evidence and remaining physical checks. No protected-card writes, DRM removal, subscription downloading, home-server installations or unrelated-project changes are part of this release.

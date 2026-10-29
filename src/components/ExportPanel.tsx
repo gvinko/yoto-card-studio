@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import JSZip from 'jszip';
 import { ChevronDown, ChevronUp, Cloud, Download, LoaderCircle, LogOut, Trash2 } from 'lucide-react';
 import type { Output, Project } from '../types';
@@ -19,6 +19,10 @@ interface Props {
 }
 
 export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
+  const currentProject = useRef(project);
+  const active = useRef(true);
+  currentProject.current = project;
+  useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
   const [bitrate, setBitrate] = useState<128 | 192>(128);
   const [fast, setFast] = useState(true);
   const [status, setStatus] = useState('');
@@ -70,6 +74,7 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
           },
           (p) => setStatus(`Track ${i + 1}/${total} · ${Math.round(p * 100)}%`),
         );
+        if (!active.current || currentProject.current !== project) throw new Error('Project changed during build. Build the latest version again.');
         out.push({ trackId: t.id, trackNo: i + 1, title: t.title, name: `${pad2(i + 1)} - ${safeName(t.title)}.${ext}`, blob });
         setOutputs([...out]);
       }
@@ -116,11 +121,11 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
         <div className="grid gap-3 p-4 sm:grid-cols-2">
           <label className="block">
             <span className="text-xs text-slate-500">Playlist / album title</span>
-            <input className="field mt-1 w-full" value={project.title} onChange={(e) => onChange({ ...project, title: e.target.value })} />
+            <input disabled={running} className="field mt-1 w-full" value={project.title} onChange={(e) => onChange({ ...project, title: e.target.value })} />
           </label>
           <label className="block">
             <span className="text-xs text-slate-500">Artist / author</span>
-            <input className="field mt-1 w-full" value={project.artist} onChange={(e) => onChange({ ...project, artist: e.target.value })} />
+            <input disabled={running} className="field mt-1 w-full" value={project.artist} onChange={(e) => onChange({ ...project, artist: e.target.value })} />
           </label>
         </div>
         <ol className="divide-y divide-white/5 border-t border-white/5">
@@ -131,15 +136,15 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
               <li key={t.id} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-black">{t.icon && <IconThumb icon={t.icon} />}</div>
                 <span className="w-6 shrink-0 text-right font-mono text-sm text-slate-500">{i + 1}</span>
-                <input className="field min-w-0 flex-1" value={t.title} onChange={(e) => patchTrack(t.id, e.target.value)} />
+                <input disabled={running} className="field min-w-0 flex-1" value={t.title} onChange={(e) => patchTrack(t.id, e.target.value)} />
                 <span className="hidden w-16 text-right font-mono text-xs text-slate-500 sm:block">
                   {o ? `${(o.blob.size / 1e6).toFixed(1)} MB` : fileMode ? '' : span && fmt(span.end - span.start)}
                 </span>
                 {fileMode && (
                   <div className="flex shrink-0">
-                    <button aria-label="Up" className="p-1 text-slate-400 disabled:opacity-25" disabled={i === 0} onClick={() => move(i, -1)}><ChevronUp size={16} /></button>
-                    <button aria-label="Down" className="p-1 text-slate-400 disabled:opacity-25" disabled={i === project.tracks.length - 1} onClick={() => move(i, 1)}><ChevronDown size={16} /></button>
-                    <button aria-label="Remove" className="p-1 text-slate-400" onClick={() => remove(t.id)}><Trash2 size={16} /></button>
+                    <button aria-label="Up" className="p-1 text-slate-400 disabled:opacity-25" disabled={running || i === 0} onClick={() => move(i, -1)}><ChevronUp size={16} /></button>
+                    <button aria-label="Down" className="p-1 text-slate-400 disabled:opacity-25" disabled={running || i === project.tracks.length - 1} onClick={() => move(i, 1)}><ChevronDown size={16} /></button>
+                    <button aria-label="Remove" disabled={running} className="p-1 text-slate-400" onClick={() => remove(t.id)}><Trash2 size={16} /></button>
                   </div>
                 )}
               </li>
@@ -176,7 +181,7 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
 
         <section className="card">
           <h3 className="mb-3 font-medium text-white">2 · Save</h3>
-          <button className="btn w-full" disabled={!outputs.length || running} onClick={downloadZip}>
+          <button className="btn w-full" disabled={outputs.length !== project.tracks.length || !outputs.length || running} onClick={downloadZip}>
             <Download size={16} /> Download ZIP (tracks + icons)
           </button>
         </section>
@@ -189,8 +194,9 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
 
 function YotoSend({ project, outputs, disabled }: { project: Project; outputs: Output[]; disabled: boolean }) {
   const [signedIn, setSignedIn] = useState(isSignedIn());
-  const [cards, setCards] = useState<MyCard[]>([]);
-  const [target, setTarget] = useState('');
+  const [, setCards] = useState<MyCard[]>([]);
+  const target = '';
+  const [eligible, setEligible] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -211,6 +217,9 @@ function YotoSend({ project, outputs, disabled }: { project: Project; outputs: O
   };
 
   const send = async () => {
+    if (!eligible) return setError('Confirm you have permission to copy this audio.');
+    if (outputs.some(o => o.blob.size > YOTO_LIMITS.trackBytes) || outputs.reduce((s,o)=>s+o.blob.size,0) > YOTO_LIMITS.cardBytes) return setError('Audio exceeds Yoto size limits.');
+    if (project.duration > YOTO_LIMITS.cardSeconds || [...segments(project).values()].some(s=>s.end-s.start > YOTO_LIMITS.trackSeconds)) return setError('Split the audio to fit Yoto duration limits.');
     if (outputs.length > YOTO_LIMITS.tracks) return setError(`Yoto allows ${YOTO_LIMITS.tracks} tracks per card.`);
     if (target && !confirm('Replace everything on that playlist with these tracks?')) return;
     setError('');
@@ -247,13 +256,9 @@ function YotoSend({ project, outputs, disabled }: { project: Project; outputs: O
         <button className="btn w-full" onClick={login}>Sign in to Yoto</button>
       ) : (
         <>
-          <select className="field mt-2 w-full" value={target} onChange={(e) => setTarget(e.target.value)}>
-            <option value="">New playlist “{project.title}”</option>
-            {cards.map((c) => (
-              <option key={c.cardId} value={c.cardId}>Replace: {c.title}</option>
-            ))}
-          </select>
-          <button className="btn-primary mt-3 w-full" disabled={disabled || busy} onClick={send}>
+          <label className="flex gap-3 text-sm my-3"><input type="checkbox" checked={eligible} onChange={e=>setEligible(e.target.checked)} />I own this audio or have permission to copy it to a MYO card.</label>
+          <p className="text-sm text-slate-300">Creates a new playlist. Existing cards and playlists are preserved.</p>
+          <button className="btn-primary mt-3 w-full" disabled={disabled || busy || !eligible} onClick={send}>
             {busy ? <><LoaderCircle size={16} className="animate-spin" /> {status}</> : `Upload ${outputs.length || ''} tracks`}
           </button>
           {done && (
