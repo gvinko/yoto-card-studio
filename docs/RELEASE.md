@@ -18,7 +18,7 @@ No production deployment, merge, protected card write or home-server installatio
 | Check | Result |
 | --- | --- |
 | Baseline build before changes | Passed |
-| `npm test` | 24 tests, six files, passed |
+| `npm test` | 24 tests, six files, passed on Node 22 and Node 24 |
 | `npm run build` | TypeScript and Vite production build passed; FFmpeg core copied and service worker generated |
 | Browser suite | 24 passed across Chromium desktop, Android emulation, iPhone WebKit emulation and Surface touch viewport |
 | `npm audit --audit-level=high` | Zero known vulnerabilities |
@@ -30,7 +30,9 @@ Unit/security coverage: File/icon persistence, current/previous drafts, non-dest
 
 Browser coverage: parent setup and reload lock, parent-only/child-shared audio, offline story access after app-shell installation, backup download and restore as fresh parent-only copies, real PCM WAV import and FFmpeg MP3 export, previous draft recovery after reload, permission-gated library-to-MYO preparation with chapter editing, recording finalisation on parent lock (mock microphone), playlist playback order, and child-screen horizontal overflow checks. Desktop and phone screenshots are in `docs/evidence/`; CI uploads full browser reports.
 
-The cloud worker could not install system browser libraries as root. Required Debian browser libraries were downloaded and extracted into temporary workspace paths and linked into the local Playwright distribution. The local suite therefore ran with `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` after confirming the actual browser could launch; no application tests were skipped. CI uses the normal `playwright install --with-deps` path. WebKit exposed a genuine Blob/File IndexedDB failure, confirmed with a direct capability experiment; a tested binary-buffer fallback now handles it.
+The cloud development container could not install system browser libraries as root. Required Debian browser libraries were downloaded and extracted into temporary workspace paths and linked into the local Playwright distribution. The local suite therefore ran with `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1` after confirming the actual browser could launch; no application tests were skipped. CI uses the normal `playwright install --with-deps` path. WebKit exposed a genuine Blob/File IndexedDB failure, confirmed with a direct capability experiment; a tested binary-buffer fallback now handles it.
+
+The first GitHub CI run found that Node 22's structured clone turns a File into a Blob and drops its name. This was reproduced locally and corrected by checking the complete media storage round trip, rather than only whether writing succeeded. The binary fallback preserves File metadata in this case. The full unit suite now passes on both Node 22 and 24.
 
 ## Functional boundaries
 

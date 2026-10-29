@@ -60,10 +60,18 @@ async function needsBuffers() {
       await transaction<void>("drafts", "readwrite", (s) => {
         s.put(new File(["probe"], "probe"), "media-probe");
       });
+      const roundTrip = await transaction<unknown>(
+        "drafts",
+        "readonly",
+        (s, result) => {
+          s.get("media-probe").onsuccess = (e) =>
+            result((e.target as IDBRequest).result);
+        },
+      );
       await transaction<void>("drafts", "readwrite", (s) => {
         s.delete("media-probe");
       });
-      return false;
+      return !(roundTrip instanceof File && roundTrip.name === "probe");
     } catch {
       return true;
     }
