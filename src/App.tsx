@@ -1,112 +1,320 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { AudioLines, Download, Nfc, Paintbrush, Settings, Upload, X } from 'lucide-react';
-import type { Output, Project } from './types';
-import { completeSignInIfCallback } from './lib/yoto/auth';
-import { IngestPanel } from './components/IngestPanel';
-import { ChapterStudio } from './components/ChapterStudio';
-import { IconStudio } from './components/IconEditor';
-import { ExportPanel } from './components/ExportPanel';
-import { NfcPanel } from './components/NfcPanel';
-import { SettingsPanel } from './components/SettingsPanel';
+import { useEffect, useRef, useState } from "react";
+import {
+  AudioLines,
+  BookOpen,
+  Download,
+  FolderOpen,
+  Lock,
+  Nfc,
+  Paintbrush,
+  Settings,
+  Upload,
+} from "lucide-react";
+import type { Output, Project } from "./types";
+import { completeSignInIfCallback } from "./lib/yoto/auth";
+import { IngestPanel } from "./components/IngestPanel";
+import { ChapterStudio } from "./components/ChapterStudio";
+import { IconStudio } from "./components/IconEditor";
+import { ExportPanel } from "./components/ExportPanel";
+import { NfcPanel } from "./components/NfcPanel";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { ProjectShelf } from "./components/ProjectShelf";
+import { FamilyLibrary } from "./components/FamilyLibrary";
+import { Connections } from "./components/Connections";
+import { hasParentPin, setParentPin, unlockParent } from "./lib/parent";
+import { putRecord, recoverDraft, saveDraft } from "./lib/storage";
 
-type Tab = 'import' | 'studio' | 'icons' | 'export' | 'nfc' | 'settings';
-
-const TABS: { id: Tab; label: string; icon: ReactNode; needsProject?: boolean }[] = [
-  { id: 'import', label: 'Import', icon: <Upload size={20} /> },
-  { id: 'studio', label: 'Chapters', icon: <AudioLines size={20} />, needsProject: true },
-  { id: 'icons', label: 'Icons', icon: <Paintbrush size={20} />, needsProject: true },
-  { id: 'export', label: 'Export', icon: <Download size={20} />, needsProject: true },
-  { id: 'nfc', label: 'NFC', icon: <Nfc size={20} /> },
-  { id: 'settings', label: 'Settings', icon: <Settings size={20} /> },
-];
-
+type Tab =
+  | "library"
+  | "projects"
+  | "import"
+  | "studio"
+  | "icons"
+  | "export"
+  | "nfc"
+  | "settings"
+  | "connections";
+const TABS = [
+  { id: "library", label: "Library", icon: BookOpen },
+  { id: "projects", label: "Projects", icon: FolderOpen },
+  { id: "import", label: "Import", icon: Upload },
+  { id: "studio", label: "Chapters", icon: AudioLines, needsProject: true },
+  { id: "icons", label: "Icons", icon: Paintbrush, needsProject: true },
+  { id: "export", label: "Export", icon: Download, needsProject: true },
+  { id: "nfc", label: "NFC", icon: Nfc },
+  { id: "connections", label: "Connections", icon: BookOpen },
+  { id: "settings", label: "Settings", icon: Settings },
+] as const;
+// One callback exchange even under React StrictMode's development effect replay.
+let callbackResult: Promise<boolean> | undefined;
 export default function App() {
-  const [tab, setTab] = useState<Tab>('import');
+  const savedProject = useRef<Project | null>(null);
+  const [tab, setTab] = useState<Tab>("library");
   const [project, setProjectRaw] = useState<Project | null>(null);
   const [outputs, setOutputs] = useState<Output[]>([]);
   const [callback, setCallback] = useState(false);
-
+  const [parent, setParent] = useState(false);
+  const [gate, setGate] = useState(false);
+  const [pin, setPin] = useState("");
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [ready, setReady] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
   useEffect(() => {
-    completeSignInIfCallback()
+    (callbackResult ??= completeSignInIfCallback())
       .then((was) => was && setCallback(true))
-      .catch((e) => alert(String(e)));
+      .catch((e) => setError(String(e)));
+    recoverDraft()
+      .then((p) => {
+        if (p) {
+          savedProject.current = p;
+          setProjectRaw(p);
+          setStatus("Draft recovered on this device");
+        }
+      })
+      .catch((e) => setError(`Recovery unavailable: ${String(e)}`))
+      .finally(() => setReady(true));
   }, []);
-
-  // Any edit to tracks invalidates built files.
-  const setProject = (p: Project | null) => {
+  useEffect(() => {
+    if (!ready || !project || project === savedProject.current) return;
+    setStatus("Saving draft…");
+    const timer = setTimeout(() => {
+      saveDraft(project)
+        .then(() => {
+          savedProject.current = project;
+          setStatus("Draft saved on this device");
+        })
+        .catch((e) => {
+          setStatus("Draft not saved");
+          setError(
+            `Save failed: ${String(e)}. Download a backup from Projects.`,
+          );
+        });
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [project, ready]);
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (project && project !== savedProject.current) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [project]);
+  useEffect(() => {
+    if (!parent) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const lock = () => {
+      setParent(false);
+      setTab("library");
+      setGate(false);
+      setPin("");
+    };
+    const activity = () => {
+      clearTimeout(timer);
+      timer = setTimeout(lock, 5 * 60_000);
+    };
+    const hide = () => {
+      if (document.hidden) lock();
+    };
+    activity();
+    window.addEventListener("pointerdown", activity);
+    window.addEventListener("keydown", activity);
+    document.addEventListener("visibilitychange", hide);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("pointerdown", activity);
+      window.removeEventListener("keydown", activity);
+      document.removeEventListener("visibilitychange", hide);
+    };
+  }, [parent]);
+  async function openProject(p: Project) {
+    try {
+      if (project)
+        await putRecord({
+          id: crypto.randomUUID(),
+          kind: "project",
+          title: project.title,
+          updated: Date.now(),
+          project,
+        });
+      await saveDraft(p);
+      savedProject.current = p;
+      setStatus("Draft saved on this device");
+      setProjectRaw(p);
+      setOutputs([]);
+      setTab(p.source ? "studio" : "export");
+    } catch (e) {
+      setError(
+        `Could not preserve the project: ${String(e)}. Back up your current work before importing.`,
+      );
+    }
+  }
+  const editProject = (p: Project) => {
     setProjectRaw(p);
     setOutputs([]);
   };
-  const editProject = (p: Project) => {
-    setProjectRaw((prev) => {
-      if (prev && (prev.tracks !== p.tracks || prev.title !== p.title || prev.artist !== p.artist)) setOutputs([]);
-      return p;
-    });
-  };
-
+  async function unlock() {
+    setUnlocking(true);
+    setError("");
+    try {
+      if (hasParentPin()) await unlockParent(pin);
+      else await setParentPin(pin);
+      setParent(true);
+      setGate(false);
+      setPin("");
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setUnlocking(false);
+    }
+  }
   if (callback)
-    return <div className="grid min-h-dvh place-items-center p-6 text-center text-slate-300">Signed in to Yoto. You can close this tab.</div>;
-
-  const visible = TABS.filter((t) => !t.needsProject || project);
-
+    return (
+      <main className="p-8">Signed in to Yoto. You can close this tab.</main>
+    );
   return (
-    <div className="min-h-dvh pb-24 lg:pb-0 lg:pl-56">
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-white/5 bg-[#0b0f17]/90 backdrop-blur-xl lg:inset-y-0 lg:left-0 lg:right-auto lg:w-56 lg:border-r lg:border-t-0">
-        <div className="hidden px-5 pb-6 pt-7 lg:block">
-          <p className="text-sm font-semibold tracking-wide text-white">Yoto Card Studio</p>
-          <p className="text-xs text-slate-500">Personal edition</p>
-        </div>
-        <ul className="flex justify-around px-1 pb-[env(safe-area-inset-bottom)] lg:flex-col lg:gap-1 lg:px-3">
-          {visible.map((t) => (
-            <li key={t.id}>
-              <button
-                onClick={() => setTab(t.id)}
-                className={`flex flex-col items-center gap-1 px-2 py-2.5 text-[11px] transition lg:w-full lg:flex-row lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
-                  tab === t.id ? 'text-amber-400 lg:bg-white/5' : 'text-slate-500 hover:text-slate-200'
-                }`}
-              >
-                {t.icon}
-                {t.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <main className="mx-auto max-w-5xl px-4 pt-6 lg:px-8 lg:pt-10">
-        <header className="mb-6 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-white">{TABS.find((t) => t.id === tab)!.label}</h1>
-            {project && <p className="truncate text-sm text-slate-500">{project.title} · {project.tracks.length} tracks</p>}
+    <div className="min-h-dvh pb-10">
+      <header className="app-header">
+        <a href="#main" className="sr-only focus:not-sr-only">
+          Skip to content
+        </a>
+        <div className="flex items-center gap-3">
+          <BookOpen className="text-amber-300" />
+          <div>
+            <h1 className="text-xl font-semibold">
+              {parent ? "Yoto Card Studio" : "Evie’s listening room"}
+            </h1>
+            <p className="text-sm text-slate-300">
+              {parent
+                ? "Family library & card maker"
+                : "A world of stories and sounds"}
+            </p>
           </div>
-          {project && (
-            <button
-              className="btn shrink-0"
-              onClick={() => {
-                if (confirm('Close this project? Unsaved work is lost.')) {
-                  setProject(null);
-                  setTab('import');
-                }
-              }}
-            >
-              <X size={16} /> Close
+        </div>
+        <button
+          className="btn shrink-0"
+          onClick={() => {
+            if (parent) {
+              setParent(false);
+              setTab("library");
+            } else setGate(!gate);
+          }}
+        >
+          <Lock size={16} />
+          {parent ? "Child view" : "Parent area"}
+        </button>
+      </header>
+      <main id="main" className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
+        {error && (
+          <p
+            role="alert"
+            className="mb-5 rounded-xl bg-red-950 p-4 text-red-100"
+          >
+            {error}
+            <button className="btn ml-3" onClick={() => setError("")}>
+              Dismiss
             </button>
-          )}
-        </header>
-
-        {tab === 'import' && (
-          <IngestPanel
-            onProject={(p) => {
-              setProject(p);
-              setTab(p.source ? 'studio' : 'export');
+          </p>
+        )}
+        {gate && !parent && (
+          <form
+            className="card mb-8 max-w-md space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              unlock();
             }}
+          >
+            <h2 className="text-xl font-semibold">
+              {hasParentPin()
+                ? "Welcome back, grown-up"
+                : "Set up the parent area"}
+            </h2>
+            <p className="text-sm text-slate-300">
+              {hasParentPin()
+                ? "Enter your PIN to manage audio and cards."
+                : "A grown-up should choose a 6–12 digit PIN. This locks editing on this browser; it is not a family account."}
+            </p>
+            <label className="block">
+              Parent PIN
+              <input
+                className="field mt-2 w-full"
+                type="password"
+                inputMode="numeric"
+                autoComplete="off"
+                minLength={6}
+                maxLength={12}
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+              />
+            </label>
+            <button className="btn-primary" disabled={unlocking}>
+              {unlocking
+                ? "Checking…"
+                : hasParentPin()
+                  ? "Unlock parent area"
+                  : "Set PIN and unlock"}
+            </button>
+          </form>
+        )}
+        {parent && (
+          <>
+            <nav
+              aria-label="Parent navigation"
+              className="mb-8 flex flex-wrap gap-2"
+            >
+              {TABS.filter((t) => !("needsProject" in t) || project).map(
+                (t) => (
+                  <button
+                    className={tab === t.id ? "btn-primary" : "btn"}
+                    aria-current={tab === t.id ? "page" : undefined}
+                    key={t.id}
+                    onClick={() => setTab(t.id)}
+                  >
+                    <t.icon size={17} />
+                    {t.label}
+                  </button>
+                ),
+              )}
+            </nav>
+            {project && (
+              <p className="mb-5 text-sm text-slate-300">
+                {project.title} · {project.tracks.length} tracks ·{" "}
+                <span role="status">{status}</span>
+              </p>
+            )}
+          </>
+        )}
+        {(!parent || tab === "library") && (
+          <FamilyLibrary
+            key={parent ? "parent" : "child"}
+            parent={parent}
+            onProject={(p) => parent && openProject(p)}
           />
         )}
-        {tab === 'studio' && project && <ChapterStudio project={project} onChange={editProject} />}
-        {tab === 'icons' && project && <IconStudio project={project} onChange={editProject} />}
-        {tab === 'export' && project && <ExportPanel project={project} onChange={editProject} outputs={outputs} setOutputs={setOutputs} />}
-        {tab === 'nfc' && <NfcPanel />}
-        {tab === 'settings' && <SettingsPanel />}
+        {parent && tab === "projects" && (
+          <ProjectShelf project={project} onOpen={openProject} />
+        )}
+        {parent && tab === "import" && <IngestPanel onProject={openProject} />}
+        {parent && tab === "studio" && project && (
+          <ChapterStudio project={project} onChange={editProject} />
+        )}
+        {parent && tab === "icons" && project && (
+          <IconStudio project={project} onChange={editProject} />
+        )}
+        {parent && tab === "export" && project && (
+          <ExportPanel
+            project={project}
+            onChange={editProject}
+            outputs={outputs}
+            setOutputs={setOutputs}
+          />
+        )}
+        {parent && tab === "nfc" && <NfcPanel />}
+        {parent && tab === "settings" && <SettingsPanel />}
+        {parent && tab === "connections" && <Connections />}
       </main>
     </div>
   );

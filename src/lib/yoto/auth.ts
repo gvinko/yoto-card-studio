@@ -4,7 +4,7 @@
 const AUTH = 'https://login.yotoplay.com';
 export const API = 'https://api.yotoplay.com';
 const SCOPES = 'user:content:manage user:icons:manage offline_access';
-const K = { client: 'yoto.clientId', tokens: 'yoto.tokens', verifier: 'yoto.pkce' } as const;
+const K = { client: 'yoto.clientId', tokens: 'yoto.tokens', verifier: 'yoto.pkce', state: 'yoto.state' } as const;
 
 interface Tokens {
   access_token: string;
@@ -51,7 +51,7 @@ function saveTokens(t: { access_token: string; refresh_token?: string }) {
 }
 
 export const isSignedIn = () => !!loadTokens()?.refresh_token || !!loadTokens()?.access_token;
-export const signOut = () => localStorage.removeItem(K.tokens);
+export const signOut = () => { localStorage.removeItem(K.tokens); localStorage.removeItem(K.verifier); localStorage.removeItem(K.state); };
 
 async function tokenRequest(body: Record<string, string>) {
   const r = await fetch(`${AUTH}/oauth/token`, {
@@ -59,33 +59,39 @@ async function tokenRequest(body: Record<string, string>) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ client_id: getClientId(), ...body }),
   });
-  if (!r.ok) throw new Error(`Yoto sign-in failed (${r.status}): ${await r.text()}`);
+  if (!r.ok) throw new Error(`Yoto sign-in failed (${r.status}): Please try again.`);
   saveTokens(await r.json());
 }
 
 /** Opens Yoto login. Resolves once the popup has stored tokens. */
-export async function signIn(): Promise<void> {
+export async function signIn(players = false): Promise<void> {
   if (!getClientId()) throw new Error('Add your Yoto client ID in Settings first.');
+  const popup = window.open('about:blank', 'yoto-login', 'width=480,height=720');
+  const state = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  localStorage.setItem(K.state, JSON.stringify({state, at: Date.now()}));
   const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
   localStorage.setItem(K.verifier, verifier); // localStorage: shared with the popup tab
   const url = `${AUTH}/authorize?${new URLSearchParams({
+    state,
     audience: API,
-    scope: SCOPES,
+    scope: SCOPES + (players ? ' family:library:view family:devices:view family:devices:control' : ''),
     response_type: 'code',
     client_id: getClientId(),
     code_challenge: challenge,
     code_challenge_method: 'S256',
     redirect_uri: redirectUri(),
   })}`;
-  const popup = window.open(url, 'yoto-login', 'width=480,height=720');
+  if (popup) popup.location.href = url;
   if (!popup) {
     location.href = url; // popup blocked: full redirect (unsaved work is lost)
     return;
   }
   const before = loadTokens()?.access_token;
   await new Promise<void>((resolve, reject) => {
+    const started = Date.now();
     const timer = setInterval(() => {
+      if (Date.now() - started > 300000) { clearInterval(timer); popup.close(); reject(new Error('Yoto sign-in timed out. Try again.')); return; }
       const now = loadTokens()?.access_token;
       if (now && now !== before) {
         clearInterval(timer);
@@ -102,14 +108,18 @@ export async function signIn(): Promise<void> {
 export async function completeSignInIfCallback(): Promise<boolean> {
   const q = new URLSearchParams(location.search);
   const code = q.get('code');
-  if (!code) return false;
+  if (!code && !q.has('error')) return false;
   history.replaceState(null, '', redirectUri());
+  const pending = JSON.parse(localStorage.getItem(K.state) ?? 'null');
+  localStorage.removeItem(K.state);
+  if (!pending || pending.state !== q.get('state') || Date.now() - pending.at > 600000) throw new Error('Yoto sign-in state is invalid or expired. Start sign-in again.');
+  if (q.has('error')) throw new Error('Yoto sign-in was declined.');
   const verifier = localStorage.getItem(K.verifier);
   localStorage.removeItem(K.verifier);
-  if (!verifier) return false;
+  if (!verifier || !code) throw new Error('Yoto sign-in expired. Start again.');
   await tokenRequest({ grant_type: 'authorization_code', code_verifier: verifier, code, redirect_uri: redirectUri() });
-  if (window.opener) window.close();
-  return true;
+  if (window.opener) { window.close(); return true; }
+  return false;
 }
 
 let refreshing: Promise<void> | null = null;

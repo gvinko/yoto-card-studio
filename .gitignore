@@ -2,3 +2,9 @@ node_modules
 dist
 helper/.token
 .DS_Store
+test-results
+playwright-report
+.env
+.env.*
+!.env.example
+public/ffmpeg

@@ -35,3 +35,25 @@
     @apply ml-1 rounded-sm bg-amber-500 px-1 font-mono text-[10px] leading-4 font-bold text-slate-950;
   }
 }
+
+@layer base {
+  button, input, select, textarea { touch-action: manipulation; }
+  button, a, input, select, textarea { &:focus-visible { outline: 3px solid #fbbf24; outline-offset: 4px; } }
+  ::selection { background: #fbbf24; color: #0b0f17; }
+  input, textarea { caret-color: #fbbf24; }
+  input::placeholder, textarea::placeholder { color: #94a3b8; }
+  audio { max-width: 100%; }
+}
+.app-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; max-width:1200px; margin:auto; padding:1.5rem; border-bottom:1px solid #ffffff18; }
+.listening-intro { display:flex; align-items:center; gap:1.5rem; padding:1rem 0 1.5rem; color:#fde68a; }
+.library-list { display:grid; grid-template-columns:1fr; gap:0; }
+.library-item { display:flex; align-items:flex-start; gap:1.25rem; padding:1.5rem 0; border-bottom:1px solid #ffffff18; }
+.library-art { width:4rem; height:5rem; display:grid; place-items:center; flex-shrink:0; background:#344451; color:#fde68a; border-radius:6px 12px 12px 6px; }
+.music-art { background:#483c58; color:#e9d5ff; border-radius:50%; height:4rem; }
+.voice-art { background:#284d45; color:#bbf7d0; border-radius:12px; height:4rem; }
+.empty-library { display:flex; flex-direction:column; align-items:center; gap:1rem; padding:3rem 1rem; text-align:center; color:#fde68a; }
+.now-playing { padding:1.5rem; background:#182b32; border-radius:12px; }
+.activity-strip { display:flex; gap:1rem; background:#302b21; color:#fef3c7; padding:1.5rem; border-radius:12px; }
+.activity-strip > svg { flex-shrink:0; }
+@media(max-width:480px) { .app-header { padding:1rem; flex-wrap:wrap; } .listening-intro { gap:1rem; align-items:flex-start; } .listening-intro > svg { display:none; } .library-art { width:3rem; height:3.5rem; } .library-item { gap:.75rem; } .field { max-width:100%; } }
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { transition:none!important; animation:none!important; } }

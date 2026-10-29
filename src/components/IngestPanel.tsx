@@ -1,10 +1,9 @@
 import { useRef, useState } from 'react';
-import { Link2, LoaderCircle, Music, TriangleAlert, Upload } from 'lucide-react';
+import { LoaderCircle, Music, TriangleAlert, Upload } from 'lucide-react';
 import type { Project } from '../types';
 import { uid } from '../types';
 import { probe } from '../lib/audio/ffmpeg';
-import { cleanTitle, fmt, stem } from '../lib/time';
-import * as helper from '../lib/helper';
+import { cleanTitle, stem } from '../lib/time';
 
 const AUDIO_EXT = /\.(mp3|m4a|m4b|aac|flac|wav|ogg|opus|mp4)$/i;
 
@@ -97,88 +96,9 @@ export function IngestPanel({ onProject }: { onProject: (p: Project) => void }) 
       </section>
 
       {error && <Alert text={error} />}
-      <UrlRipper onFile={(f) => take([f])} />
+      <p className="text-sm text-slate-300">Import audio you own or have permission to copy. <a className="text-amber-300 underline" href="https://music.youtube.com" target="_blank" rel="noreferrer">YouTube Music opens in its official player</a>; subscription audio stays there.</p>
     </div>
   );
-}
-
-function UrlRipper({ onFile }: { onFile: (f: File) => void }) {
-  const [url, setUrl] = useState('');
-  const [bitrate, setBitrate] = useState<128 | 192>(192);
-  const [meta, setMeta] = useState<helper.MediaInfo | null>(null);
-  const [job, setJob] = useState<helper.Job | null>(null);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const lookup = async () => {
-    setError('');
-    setMeta(null);
-    setBusy(true);
-    try {
-      setMeta(await helper.info(url));
-    } catch (e) {
-      setError(helperError(e));
-    }
-    setBusy(false);
-  };
-
-  const go = async () => {
-    setError('');
-    setBusy(true);
-    try {
-      onFile(await helper.rip(url, bitrate, setJob));
-      setUrl('');
-      setMeta(null);
-    } catch (e) {
-      setError(helperError(e));
-    }
-    setJob(null);
-    setBusy(false);
-  };
-
-  return (
-    <section className="card">
-      <h3 className="mb-1 flex items-center gap-2 font-medium text-white">
-        <Link2 size={16} className="text-amber-400" /> From a link
-      </h3>
-      <p className="mb-3 text-sm text-slate-400">Runs yt-dlp on your own laptop helper. No converter sites, no pop-ups.</p>
-      <div className="flex gap-2">
-        <input className="field min-w-0 flex-1" placeholder="https://…" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && url && lookup()} />
-        <button className="btn" disabled={!url || busy} onClick={lookup}>Check</button>
-      </div>
-
-      {meta && (
-        <div className="mt-3 flex gap-3 rounded-xl bg-slate-950/50 p-3">
-          {meta.thumbnail && <img src={meta.thumbnail} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" referrerPolicy="no-referrer" />}
-          <div className="min-w-0 text-sm">
-            <p className="truncate font-medium text-white">{meta.title}</p>
-            <p className="text-slate-400">
-              {meta.uploader} · {fmt(meta.duration)}
-              {meta.chapters.length > 0 && ` · ${meta.chapters.length} chapters`}
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center gap-2">
-        <select className="field" value={bitrate} onChange={(e) => setBitrate(+e.target.value as 128 | 192)}>
-          <option value={192}>192 kbps MP3</option>
-          <option value={128}>128 kbps MP3</option>
-        </select>
-        <button className="btn-primary flex-1" disabled={!url || busy} onClick={go}>
-          {job ? `${job.stage} ${Math.round(job.progress * 100)}%` : busy ? <LoaderCircle size={16} className="animate-spin" /> : 'Rip to studio'}
-        </button>
-      </div>
-      {error && <div className="mt-3"><Alert text={error} /></div>}
-    </section>
-  );
-}
-
-function helperError(e: unknown): string {
-  const msg = e instanceof Error ? e.message : String(e);
-  return /Failed to fetch|NetworkError|Load failed/i.test(msg)
-    ? `Can't reach the helper at ${helper.getHelper().url}. Start it with "npm run helper" on the laptop and check Settings.`
-    : msg;
 }
 
 export function Alert({ text }: { text: string }) {
