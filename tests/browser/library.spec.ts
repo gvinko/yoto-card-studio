@@ -4,10 +4,10 @@ async function enableParentPin(page: Page) {
   // The editor is accessible by default on a fresh browser; an existing PIN still locks it.
   await expect(page.getByRole("button", { name: "Child view" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Import", exact: true })).toBeVisible();
-  // PIN setup remains available to users who already configured it; do not force it here.
+  // This fresh-browser scenario deliberately does not configure a PIN.
 }
 
-test("parent imports music, shares it with child, and returns locked after reload", async ({
+test("parent imports music, shares it with child, and editor remains available after reload", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
@@ -209,7 +209,7 @@ test("locking the parent area saves the final voice recording", async ({
     page.getByRole("button", { name: "Stop and save recording" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Child view" }).click();
-  await expect(page.getByRole("button", { name: "Child view" })).toBeVisible();
+  await page.getByRole("button", { name: "Editing tools" }).click();
   await expect(page.getByText(/^Family voice .*\.webm$/)).toBeVisible();
 });
 test("playlist playback follows the chosen sequence", async ({ page }) => {
