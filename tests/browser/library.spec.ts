@@ -3,8 +3,6 @@ import { test, expect, type Page } from "@playwright/test";
 async function enableParentPin(page: Page) {
   // The editor is accessible by default on a fresh browser; an existing PIN still locks it.
   await expect(page.getByRole("button", { name: "Child view" })).toBeVisible();
-  await page.getByRole("button", { name: "Child view" }).click();
-  await page.getByRole("button", { name: "Editing tools" }).click();
   await expect(page.getByRole("button", { name: "Import", exact: true })).toBeVisible();
   // PIN setup remains available to users who already configured it; do not force it here.
 }
@@ -14,7 +12,7 @@ test("parent imports music, shares it with child, and returns locked after reloa
 }, testInfo) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Evie’s listening room" }),
+    page.getByRole("heading", { name: "Yoto Card Studio" }),
   ).toBeVisible();
   await enableParentPin(page);
   await page.getByLabel("Add local audio").setInputFiles({
@@ -46,7 +44,6 @@ test("parent imports music, shares it with child, and returns locked after reloa
   await expect(
     page.getByRole("button", { name: "Play Family song.wav" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Editing tools" }).click();
   await expect(page.getByRole("button", { name: "Settings", exact: true })).toBeVisible();
 });
 test("story survives reload and child library stays offline", async ({
