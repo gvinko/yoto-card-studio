@@ -1,14 +1,20 @@
-import { test, expect } from "@playwright/test";
-test("parent imports music, shares it with child, and returns locked after reload", async ({
+import { test, expect, type Page } from "@playwright/test";
+
+async function enableParentPin(page: Page) {
+  // The editor is accessible by default on a fresh browser; an existing PIN still locks it.
+  await expect(page.getByRole("button", { name: "Child view" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Import", exact: true })).toBeVisible();
+  // This fresh-browser scenario deliberately does not configure a PIN.
+}
+
+test("parent imports music, shares it with child, and editor remains available after reload", async ({
   page,
 }, testInfo) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Evie’s listening room" }),
+    page.getByRole("heading", { name: "Yoto Card Studio" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByLabel("Add local audio").setInputFiles({
     name: "Family song.wav",
     mimeType: "audio/wav",
@@ -38,20 +44,14 @@ test("parent imports music, shares it with child, and returns locked after reloa
   await expect(
     page.getByRole("button", { name: "Play Family song.wav" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await expect(page.getByLabel("Parent PIN")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Settings", exact: true }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Settings", exact: true })).toBeVisible();
 });
 test("story survives reload and child library stays offline", async ({
   page,
   context,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByLabel("Story title").fill("The little moon");
   await page
     .getByLabel("Your original story")
@@ -75,9 +75,7 @@ test("library backup restores audio as new parent-only copies", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByLabel("Add local audio").setInputFiles({
     name: "Backup song.wav",
     mimeType: "audio/wav",
@@ -124,9 +122,7 @@ test("real WAV import, chapter recovery, and FFmpeg export preserve project", as
   wav.write("data", 36);
   wav.writeUInt32LE(16000, 40);
   await page.goto("/");
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByRole("button", { name: "Import", exact: true }).click();
   await page
     .locator("input[type=file]")
@@ -151,9 +147,7 @@ test("real WAV import, chapter recovery, and FFmpeg export preserve project", as
   await page.getByLabel("Playlist / album title").fill("Moon edited");
   await expect(page.getByText("Draft saved on this device")).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Unlock parent area" }).click();
+  await expect(page.getByRole("button", { name: "Child view" })).toBeVisible();
   await page.getByRole("button", { name: "Projects", exact: true }).click();
   await page.getByRole("button", { name: "Recover previous draft" }).click();
   await page.getByRole("button", { name: "Export", exact: true }).click();
@@ -209,24 +203,18 @@ test("locking the parent area saves the final voice recording", async ({
     });
   });
   await page.goto("/");
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByRole("button", { name: "Record family voice" }).click();
   await expect(
     page.getByRole("button", { name: "Stop and save recording" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Child view" }).click();
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Unlock parent area" }).click();
+  await page.getByRole("button", { name: "Editing tools" }).click();
   await expect(page.getByText(/^Family voice .*\.webm$/)).toBeVisible();
 });
 test("playlist playback follows the chosen sequence", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Parent area" }).click();
-  await page.getByLabel("Parent PIN").fill("123456");
-  await page.getByRole("button", { name: "Set PIN and unlock" }).click();
+  await enableParentPin(page);
   await page.getByLabel("Add local audio").setInputFiles([
     { name: "First.wav", mimeType: "audio/wav", buffer: Buffer.alloc(100) },
     { name: "Second.wav", mimeType: "audio/wav", buffer: Buffer.alloc(100) },

@@ -490,6 +490,38 @@ export function Connections() {
           Search LibriVox catalogue
         </a>
       </section>
+      <section className="space-y-4 border-t border-white/10 pt-6">
+        <h2 className="text-2xl font-semibold">Explore more music, stories and podcasts</h2>
+        <p className="text-slate-300">
+          These are external discovery catalogues, not connected personal accounts.
+          Open a source, check its licence and download rights, then import an
+          eligible DRM-free audio file through Import. A listing does not grant
+          permission to copy it onto a Yoto card.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {([
+            ["Internet Archive", "Audio, live recordings and spoken-word collections", "https://archive.org/details/audio"],
+            ["Free Music Archive", "Independent music with track-specific licences", "https://freemusicarchive.org/"],
+            ["Jamendo Music", "Independent artists; check the individual music licence", "https://www.jamendo.com/start"],
+            ["Musopen", "Classical recordings; check recording-specific rights", "https://musopen.org/music/"],
+            ["Project Gutenberg", "Free ebooks and story texts, not automatic audio", "https://www.gutenberg.org/"],
+            ["Open Library", "Discover books and editions; borrowing is not an audio export", "https://openlibrary.org/"],
+            ["Podcast Index", "Discover podcasts and their official feeds", "https://podcastindex.org/"],
+            ["Radio Browser", "Browse internet radio streams; not downloadable card audio", "https://www.radio-browser.info/"],
+          ] as const).map(([name, description, url]) => (
+            <a key={name} className="card block space-y-1 hover:border-amber-300"
+              href={url} target="_blank" rel="noopener noreferrer">
+              <span className="font-semibold text-amber-300">{name} ↗</span>
+              <p className="text-sm text-slate-300">{description}</p>
+            </a>
+          ))}
+        </div>
+        <p className="text-sm text-slate-300">
+          Audiobookshelf and Home Assistant are private-server integrations and
+          still require the optional gateway on your mini PC. Spotify, YouTube
+          Music and subscription audiobooks are not downloadable card sources.
+        </p>
+      </section>
       <p role="status" className="text-amber-200">
         {busy ? "Connecting…" : message}
       </p>

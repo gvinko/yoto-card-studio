@@ -53,7 +53,7 @@ export default function App() {
   const [project, setProjectRaw] = useState<Project | null>(null);
   const [outputs, setOutputs] = useState<Output[]>([]);
   const [callback, setCallback] = useState(false);
-  const [parent, setParent] = useState(false);
+  const [parent, setParent] = useState(() => !hasParentPin());
   const [gate, setGate] = useState(false);
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -104,7 +104,7 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [project]);
   useEffect(() => {
-    if (!parent) return;
+    if (!parent || !hasParentPin()) return;
     let timer: ReturnType<typeof setTimeout>;
     const lock = () => {
       setParent(false);
@@ -200,11 +200,14 @@ export default function App() {
             if (parent) {
               setParent(false);
               setTab("library");
+            } else if (!hasParentPin()) {
+              setParent(true);
+              setGate(false);
             } else setGate(!gate);
           }}
         >
           <Lock size={16} />
-          {parent ? "Child view" : "Parent area"}
+          {parent ? "Child view" : hasParentPin() ? "Unlock tools" : "Editing tools"}
         </button>
       </header>
       <main id="main" className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-10">
