@@ -2,3 +2,4 @@ node_modules
 dist
 helper/.token
 .DS_Store
+helper/.env

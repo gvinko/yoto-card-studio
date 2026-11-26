@@ -1,0 +1,29 @@
+# Rip helper + Cloudflare Tunnel, so the app on a phone can reach it without opening router ports.
+#   cd helper && cp .env.example .env        (set HELPER_TOKEN)
+#   docker compose --profile quick up -d --build
+#   docker compose logs tunnel | grep trycloudflare      → the https URL for Settings
+services:
+  helper:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8787:8787" # this machine only; phones come in through the tunnel
+
+  # Free quick tunnel: no Cloudflare account needed, but the URL changes whenever it restarts.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://helper:8787
+    depends_on: [helper]
+    profiles: [quick]
+
+  # Fixed URL (needs a domain on your Cloudflare account): set TUNNEL_TOKEN in .env and point the
+  # tunnel's public hostname at http://helper:8787 in Cloudflare Zero Trust → Networks → Tunnels.
+  tunnel-named:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    env_file: .env
+    depends_on: [helper]
+    profiles: [named]

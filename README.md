@@ -68,6 +68,23 @@ Not on PATH? `YTDLP=C:\tools\yt-dlp.exe FFMPEG=C:\tools\ffmpeg.exe npm run helpe
 
 Rips are async jobs (poll + download), so long audiobooks don't hit tunnel timeouts. YouTube chapters are embedded into the MP3 and show up as markers automatically. Files are deleted from the laptop an hour after the job finishes. Only rip things you have the rights to use.
 
+### Run it on a home server (Docker)
+
+Always on, nothing to start on a laptop. Any Linux box with Docker:
+
+```bash
+git clone https://github.com/gvinko/yoto-card-studio && cd yoto-card-studio/helper
+cp .env.example .env && sed -i "s|^HELPER_TOKEN=.*|HELPER_TOKEN=$(openssl rand -base64 24)|" .env
+docker compose --profile quick up -d --build
+docker compose logs tunnel | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com'   # URL for Settings
+grep HELPER_TOKEN .env                                                          # token for Settings
+```
+
+- yt-dlp updates itself on every start and daily. Restarts automatically after reboots.
+- The quick-tunnel URL changes when the tunnel restarts — re-check the logs and update Settings. For a fixed URL, use a domain on Cloudflare: set `TUNNEL_TOKEN` in `.env` and run `docker compose --profile named up -d --build` instead.
+- Resources: ~50 MB RAM idle, a few hundred MB while converting; files are deleted an hour after each job.
+- Update the helper: `git pull && docker compose --profile quick up -d --build`.
+
 ## How the audio side works
 
 - **Single file** (MP3/M4B/…) → embedded chapters become markers; otherwise one marker at 0:00. Add markers at the playhead (`M`), drag them, type exact timecodes, detect silence, or split into ≤60 min parts.

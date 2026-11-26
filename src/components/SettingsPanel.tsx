@@ -22,7 +22,7 @@ export function SettingsPanel() {
     setCheck({});
     try {
       const r = await helper.health();
-      setCheck(r.ytDlp && r.ffmpeg ? { ok: `Connected · yt-dlp ${r.ytDlp}` } : { err: `Helper is up but ${!r.ytDlp ? 'yt-dlp' : 'ffmpeg'} isn’t installed on the laptop.` });
+      setCheck(r.ytDlp && r.ffmpeg ? { ok: `Connected · yt-dlp ${r.ytDlp}` } : { err: `Helper is up but ${!r.ytDlp ? 'yt-dlp' : 'ffmpeg'} isn’t installed on that machine.` });
     } catch (e) {
       setCheck({ err: String(e) });
     }
@@ -46,16 +46,16 @@ export function SettingsPanel() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-medium text-white">Rip helper (laptop)</h2>
+        <h2 className="font-medium text-white">Rip helper (home server or laptop)</h2>
         <p className="text-sm text-slate-400">
-          On the laptop itself use <code className="text-slate-300">http://localhost:8787</code>. From the phone, use the https tunnel URL the helper prints.
+          Use the https tunnel URL from your home server (or <code className="text-slate-300">http://localhost:8787</code> on the machine running the helper).
         </p>
         <label className="block">
           <span className="text-xs text-slate-500">Helper URL</span>
           <input className="field mt-1 w-full font-mono" inputMode="url" value={h.url} onChange={(e) => setH({ ...h, url: e.target.value })} />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-500">Token (printed when the helper starts)</span>
+          <span className="text-xs text-slate-500">Token (HELPER_TOKEN on the server)</span>
           <input className="field mt-1 w-full font-mono" value={h.token} onChange={(e) => setH({ ...h, token: e.target.value })} />
         </label>
         <button className="btn w-full" onClick={test}>Test connection</button>

@@ -1,0 +1,52 @@
+name: Rip helper image
+
+# Builds the home-server helper image and checks it starts, answers /health with yt-dlp + ffmpeg,
+# and rejects requests without the token. Result is also written to the audit-results branch.
+on:
+  push:
+    paths: ['helper/**', '.github/workflows/helper-docker.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start
+        working-directory: helper
+        run: |
+          echo "HELPER_TOKEN=ci-test-token" > .env
+          docker compose up -d --build helper
+          for i in $(seq 1 30); do curl -fsS -o /dev/null -H 'x-helper-token: ci-test-token' http://127.0.0.1:8787/health && break; sleep 2; done
+      - name: Check
+        working-directory: helper
+        run: |
+          set -e
+          mkdir -p /tmp/out
+          {
+            echo "health: $(curl -sS -H 'x-helper-token: ci-test-token' http://127.0.0.1:8787/health)"
+            echo "no-token status: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/health)"
+            echo "runs as: $(docker compose exec -T helper id -un)"
+            echo "image size: $(docker image ls --format '{{.Size}}' | head -1)"
+            echo "idle memory: $(docker stats --no-stream --format '{{.MemUsage}}' | head -1)"
+            docker compose logs helper | tail -5
+          } | tee /tmp/out/result.txt
+          grep -q '"ffmpeg":true' /tmp/out/result.txt
+          grep -q '"ytDlp":"20' /tmp/out/result.txt
+          grep -q 'no-token status: 401' /tmp/out/result.txt
+      - name: Publish result
+        if: always()
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEST="helper-docker/${GITHUB_SHA::7}"
+          git config --global user.name "helper-check"; git config --global user.email "actions@users.noreply.github.com"
+          mkdir /tmp/res && cd /tmp/res && git init -q && git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}"
+          if git fetch -q --depth 1 origin audit-results; then git checkout -q -b audit-results FETCH_HEAD; else git checkout -q --orphan audit-results; fi
+          mkdir -p "$DEST"; cp /tmp/out/result.txt "$DEST/" 2>/dev/null || echo "no result" > "$DEST/result.txt"
+          git add -A && git commit -qm "Helper image check ${GITHUB_SHA::7} [skip ci]"
+          for i in 1 2 3; do git push -q origin audit-results && break; git fetch -q --depth 1 origin audit-results && git rebase -q FETCH_HEAD; done

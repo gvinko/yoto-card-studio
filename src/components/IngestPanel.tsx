@@ -141,7 +141,7 @@ function UrlRipper({ onFile }: { onFile: (f: File) => void }) {
       <h2 className="mb-1 flex items-center gap-2 font-medium text-white">
         <Link2 size={16} className="text-amber-400" /> From a link
       </h2>
-      <p className="mb-3 text-sm text-slate-400">Runs yt-dlp on your own laptop helper. No converter sites, no pop-ups.</p>
+      <p className="mb-3 text-sm text-slate-400">Runs yt-dlp on your own helper (home server or laptop). No converter sites, no pop-ups.</p>
       <div className="flex gap-2">
         <input className="field min-w-0 flex-1" placeholder="https://…" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && url && lookup()} />
         <button className="btn" disabled={!url || busy} onClick={lookup}>Check</button>
@@ -177,7 +177,7 @@ function UrlRipper({ onFile }: { onFile: (f: File) => void }) {
 function helperError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   return /Failed to fetch|NetworkError|Load failed/i.test(msg)
-    ? `Can't reach the helper at ${helper.getHelper().url}. Start it with "npm run helper" on the laptop and check Settings.`
+    ? `Can't reach the helper at ${helper.getHelper().url}. Check the helper is running and the URL in Settings is current.`
     : msg;
 }
 
