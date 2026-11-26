@@ -61,8 +61,8 @@ export default function App() {
             <li key={t.id}>
               <button
                 onClick={() => setTab(t.id)}
-                className={`flex flex-col items-center gap-1 px-2 py-2.5 text-[11px] transition lg:w-full lg:flex-row lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
-                  tab === t.id ? 'text-amber-400 lg:bg-white/5' : 'text-slate-500 hover:text-slate-200'
+                className={`flex flex-col items-center gap-1 px-2 py-2.5 text-xs transition lg:w-full lg:flex-row lg:gap-3 lg:rounded-xl lg:px-3 lg:text-sm ${
+                  tab === t.id ? 'text-amber-400 lg:bg-white/5' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {t.icon}

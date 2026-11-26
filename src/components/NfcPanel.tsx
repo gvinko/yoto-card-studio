@@ -63,7 +63,7 @@ export function NfcPanel() {
       )}
 
       <section className="card">
-        <h3 className="mb-3 font-medium text-white">Read</h3>
+        <h2 className="mb-3 font-medium text-white">Read</h2>
         <button className="btn w-full" disabled={mode !== 'idle'} onClick={() => start('read')}>
           <Nfc size={16} /> Scan a tag
         </button>
@@ -89,7 +89,7 @@ export function NfcPanel() {
       </section>
 
       <section className="card">
-        <h3 className="mb-3 font-medium text-white">Write</h3>
+        <h2 className="mb-3 font-medium text-white">Write</h2>
         <div className="mb-2 flex gap-2">
           {(['url', 'text'] as const).map((k) => (
             <button key={k} className={`btn flex-1 ${kind === k ? 'bg-amber-500 text-slate-950 hover:bg-amber-400' : ''}`} onClick={() => setKind(k)}>
