@@ -1,5 +1,5 @@
 // Network-first for the app shell, cache-first for the ffmpeg core on jsDelivr (~30 MB, fetched once).
-const CACHE = 'ycs-v1';
+const CACHE = 'ycs-v2';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (e) => {

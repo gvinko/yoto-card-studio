@@ -138,9 +138,9 @@ function UrlRipper({ onFile }: { onFile: (f: File) => void }) {
 
   return (
     <section className="card">
-      <h3 className="mb-1 flex items-center gap-2 font-medium text-white">
+      <h2 className="mb-1 flex items-center gap-2 font-medium text-white">
         <Link2 size={16} className="text-amber-400" /> From a link
-      </h3>
+      </h2>
       <p className="mb-3 text-sm text-slate-400">Runs yt-dlp on your own laptop helper. No converter sites, no pop-ups.</p>
       <div className="flex gap-2">
         <input className="field min-w-0 flex-1" placeholder="https://…" inputMode="url" value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && url && lookup()} />
@@ -161,7 +161,7 @@ function UrlRipper({ onFile }: { onFile: (f: File) => void }) {
       )}
 
       <div className="mt-3 flex items-center gap-2">
-        <select className="field" value={bitrate} onChange={(e) => setBitrate(+e.target.value as 128 | 192)}>
+        <select className="field" aria-label="MP3 bitrate" value={bitrate} onChange={(e) => setBitrate(+e.target.value as 128 | 192)}>
           <option value={192}>192 kbps MP3</option>
           <option value={128}>128 kbps MP3</option>
         </select>

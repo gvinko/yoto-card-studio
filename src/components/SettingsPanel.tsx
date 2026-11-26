@@ -31,7 +31,7 @@ export function SettingsPanel() {
   return (
     <div className="space-y-4">
       <section className="card space-y-3">
-        <h3 className="font-medium text-white">Yoto API</h3>
+        <h2 className="font-medium text-white">Yoto API</h2>
         <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-400">
           <li>Sign in at <a className="text-amber-400" href="https://dashboard.yoto.dev" target="_blank" rel="noreferrer">dashboard.yoto.dev</a> and create a public (browser) app.</li>
           <li>Add this exact callback URL to the app:</li>
@@ -46,7 +46,7 @@ export function SettingsPanel() {
       </section>
 
       <section className="card space-y-3">
-        <h3 className="font-medium text-white">Rip helper (laptop)</h3>
+        <h2 className="font-medium text-white">Rip helper (laptop)</h2>
         <p className="text-sm text-slate-400">
           On the laptop itself use <code className="text-slate-300">http://localhost:8787</code>. From the phone, use the https tunnel URL the helper prints.
         </p>

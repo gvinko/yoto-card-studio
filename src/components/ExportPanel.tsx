@@ -150,7 +150,7 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
 
       <div className="space-y-4">
         <section className="card">
-          <h3 className="mb-3 font-medium text-white">1 · Build tracks</h3>
+          <h2 className="mb-3 font-medium text-white">1 · Build tracks</h2>
           <label className="flex items-start gap-3 text-sm">
             <input type="checkbox" className="mt-1 accent-amber-500" checked={fast} onChange={(e) => setFast(e.target.checked)} />
             <span>
@@ -161,7 +161,7 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
             </span>
           </label>
           {!willCopy || !fast ? (
-            <select className="field mt-3 w-full" value={bitrate} onChange={(e) => setBitrate(+e.target.value as 128 | 192)}>
+            <select className="field mt-3 w-full" aria-label="MP3 bitrate" value={bitrate} onChange={(e) => setBitrate(+e.target.value as 128 | 192)}>
               <option value={128}>MP3 128 kbps (speech / audiobooks)</option>
               <option value={192}>MP3 192 kbps (music)</option>
             </select>
@@ -175,7 +175,7 @@ export function ExportPanel({ project, onChange, outputs, setOutputs }: Props) {
         </section>
 
         <section className="card">
-          <h3 className="mb-3 font-medium text-white">2 · Save</h3>
+          <h2 className="mb-3 font-medium text-white">2 · Save</h2>
           <button className="btn w-full" disabled={!outputs.length || running} onClick={downloadZip}>
             <Download size={16} /> Download ZIP (tracks + icons)
           </button>
@@ -238,16 +238,16 @@ function YotoSend({ project, outputs, disabled }: { project: Project; outputs: O
 
   return (
     <section className="card">
-      <h3 className="mb-1 flex items-center gap-2 font-medium text-white">
+      <h2 className="mb-1 flex items-center gap-2 font-medium text-white">
         <Cloud size={16} className="text-amber-400" /> 3 · Send to Yoto
-      </h3>
+      </h2>
       {!getClientId() ? (
         <p className="text-sm text-slate-400">Add your free Yoto developer client ID in Settings to upload straight to your Yoto library.</p>
       ) : !signedIn ? (
         <button className="btn w-full" onClick={login}>Sign in to Yoto</button>
       ) : (
         <>
-          <select className="field mt-2 w-full" value={target} onChange={(e) => setTarget(e.target.value)}>
+          <select className="field mt-2 w-full" aria-label="Export target" value={target} onChange={(e) => setTarget(e.target.value)}>
             <option value="">New playlist “{project.title}”</option>
             {cards.map((c) => (
               <option key={c.cardId} value={c.cardId}>Replace: {c.title}</option>

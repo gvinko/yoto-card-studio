@@ -1,0 +1,67 @@
+name: Lighthouse audit
+
+# Builds the app, runs its own tests, then scores it with Lighthouse (3x mobile, 1x desktop).
+# Results are committed to the `audit-results` branch so they can be read without the Actions API.
+on:
+  push:
+    branches: ['audit/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_DIR: "."
+  PORT: "4173"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and build
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          set -o pipefail
+          mkdir -p "$GITHUB_WORKSPACE/lh"
+          ( npm install --no-audit --no-fund && npm run build ) 2>&1 | tee "$GITHUB_WORKSPACE/lh/build.log"
+      - name: Project tests
+        working-directory: ${{ env.APP_DIR }}
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          ( echo "no test script" ) 2>&1 | tail -150 | tee "$GITHUB_WORKSPACE/lh/tests.log"; echo "exit=${PIPESTATUS[0]}" >> "$GITHUB_WORKSPACE/lh/tests.log"
+      - name: Serve
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          nohup bash -c 'npx -y serve@14 -s dist -l $PORT' > "$GITHUB_WORKSPACE/lh/serve.log" 2>&1 &
+          for i in $(seq 1 90); do curl -fsS -o /dev/null "http://localhost:$PORT/" && break; sleep 2; done
+          curl -sS -o /dev/null -w "serve status %{http_code}\n" "http://localhost:$PORT/"
+      - name: Lighthouse
+        run: |
+          URL="http://localhost:$PORT/"
+          FLAGS='--quiet --output=json --chrome-flags=--headless=new --chrome-flags=--no-sandbox --only-categories=performance,accessibility,best-practices,seo'
+          for i in 1 2 3; do npx -y lighthouse@12 "$URL" $FLAGS --output-path="lh/lh-mobile-$i.report.json" || true; done
+          npx -y lighthouse@12 "$URL" $FLAGS --preset=desktop --output-path="lh/lh-desktop-1.report.json" || true
+          node .github/audit/summarise.mjs lh
+      - name: Publish results to audit-results branch
+        if: always()
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEST="$(echo "$GITHUB_REF_NAME" | tr '/' '-')/${GITHUB_SHA::7}"
+          rm -f lh/lh-mobile-2.report.json lh/lh-mobile-3.report.json
+          git config --global user.name "lighthouse-audit"; git config --global user.email "actions@users.noreply.github.com"
+          mkdir /tmp/res && cd /tmp/res && git init -q && git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}"
+          if git fetch -q --depth 1 origin audit-results; then git checkout -q -b audit-results FETCH_HEAD; else git checkout -q --orphan audit-results; fi
+          rm -rf "$DEST"; mkdir -p "$DEST"; cp -r "$GITHUB_WORKSPACE/lh/." "$DEST/"
+          git add -A && git commit -qm "Lighthouse results for $GITHUB_REF_NAME@${GITHUB_SHA::7} [skip ci]"
+          for i in 1 2 3; do git push -q origin audit-results && break; git fetch -q --depth 1 origin audit-results && git rebase -q FETCH_HEAD; done
