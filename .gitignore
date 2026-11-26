@@ -3,3 +3,5 @@ dist
 helper/.token
 .DS_Store
 helper/.env
+
+helper/library/

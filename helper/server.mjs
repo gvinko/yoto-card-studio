@@ -7,9 +7,10 @@
 //   PORT=9000 YTDLP=/path/yt-dlp FFMPEG=/path/ffmpeg node helper/server.mjs
 
 import { createServer } from 'node:http';
+import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, copyFileSync, renameSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -20,6 +21,8 @@ const HOST = process.env.HOST ?? '127.0.0.1'; // tunnel connects locally; set HO
 const YTDLP = process.env.YTDLP ?? 'yt-dlp';
 const FFMPEG = process.env.FFMPEG ?? 'ffmpeg';
 const WORK = join(tmpdir(), 'yoto-card-studio');
+const LIBRARY = process.env.LIBRARY_DIR ?? join(HERE, 'library');
+mkdirSync(LIBRARY, { recursive: true });
 const JOB_TTL = 60 * 60e3;
 
 const tokenFile = join(HERE, '.token');
@@ -103,6 +106,19 @@ async function info(url) {
   };
 }
 
+function listLibrary() {
+  return readdirSync(LIBRARY).filter(n => /^[a-f0-9]{16}\.mp3$/.test(n)).map(n => {
+    const id = n.slice(0,16); const meta = join(LIBRARY, id + '.json');
+    const m = existsSync(meta) ? JSON.parse(readFileSync(meta,'utf8')) : {};
+    return { id, name: m.name || n, size: statSync(join(LIBRARY,n)).size, created: m.created || '' };
+  }).sort((a,b) => b.created.localeCompare(a.created));
+}
+function saveToLibrary(file, name) {
+  const id = randomBytes(8).toString('hex');
+  copyFileSync(file, join(LIBRARY,id+'.mp3'));
+  writeFileSync(join(LIBRARY,id+'.json'),JSON.stringify({name,created:new Date().toISOString()}));
+  return id;
+}
 function startRip(url, bitrate) {
   const id = randomBytes(8).toString('hex');
   const dir = join(WORK, id);
@@ -134,7 +150,8 @@ function startRip(url, bitrate) {
   }).then((r) => {
     const mp3 = readdirSync(dir).find((f) => f.endsWith('.mp3'));
     if (r.code === 0 && mp3) {
-      Object.assign(job, { status: 'done', stage: 'done', progress: 1, file: join(dir, mp3), filename: mp3 });
+      const savedId = saveToLibrary(join(dir, mp3), mp3);
+      Object.assign(job, { status: 'done', stage: 'done', progress: 1, file: join(dir, mp3), filename: mp3, libraryId: savedId });
     } else {
       const error = r.code === -1
         ? `yt-dlp not found ("${YTDLP}"). Install it or set YTDLP=/full/path — see README.`
@@ -156,7 +173,7 @@ const server = createServer(async (req, res) => {
   // CORS + Chrome Private Network Access: the PWA is served from another origin.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'x-helper-token, content-type');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
   res.setHeader('Access-Control-Expose-Headers', 'x-filename, content-length');
   if (req.method === 'OPTIONS') return send(res, 204, '');
@@ -164,6 +181,52 @@ const server = createServer(async (req, res) => {
 
   const url = new URL(req.url ?? '/', 'http://x');
   try {
+    if (req.method === 'POST' && url.pathname === '/library/upload') {
+      const name = decodeURIComponent(String(req.headers['x-audio-filename'] || 'audio.mp3')).slice(0,180);
+      if (!/\.(mp3|m4a|m4b|aac|flac|wav|ogg|opus)$/i.test(name)) return send(res,400,'Unsupported audio type');
+      const length = Number(req.headers['content-length'] || 0);
+      if (length > 600e6) return send(res,413,'File exceeds 600 MB');
+      const id = randomBytes(8).toString('hex');
+      const target = join(LIBRARY,id+'.mp3');
+      const temp = target+'.partial';
+      let size = 0;
+      try {
+        req.on('data',chunk=>{size+=chunk.length;if(size>600e6)req.destroy()});
+        await pipeline(req,createWriteStream(temp,{flags:'wx'}));
+        if(size<1) throw new Error('Empty audio file');
+        renameSync(temp,target);
+        writeFileSync(join(LIBRARY,id+'.json'),JSON.stringify({name,created:new Date().toISOString()}));
+        return send(res,201,{id,name,size});
+      } catch(e) {
+        rmSync(temp,{force:true});
+        if (!res.headersSent && !res.destroyed) return send(res,500,'Upload interrupted');
+        return;
+      }
+    }
+    if (req.method === 'GET' && url.pathname === '/library') return send(res,200,listLibrary());
+    const lm = /^\/library\/([a-f0-9]{16})(\/file|\/project)?$/.exec(url.pathname);
+    if (lm) {
+      const [,id,part] = lm;
+      const media = join(LIBRARY,id+'.mp3');
+      const meta = join(LIBRARY,id+'.json');
+      const project = join(LIBRARY,id+'.project.json');
+      if (!existsSync(media)) return send(res,404,'Not found');
+      if (req.method === 'GET' && part === '/file') {
+        res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':statSync(media).size,'x-filename':encodeURIComponent(JSON.parse(readFileSync(meta,'utf8')).name)});
+        return createReadStream(media).pipe(res);
+      }
+      if (part === '/project' && req.method === 'GET') return send(res,200,existsSync(project)?JSON.parse(readFileSync(project,'utf8')):null);
+      if (part === '/project' && req.method === 'PUT') {
+        const body=await readJson(req,1000000);
+        if (!body || typeof body !== 'object' || typeof body.title !== 'string' || !Array.isArray(body.tracks) || body.tracks.length>100) return send(res,400,'Invalid project');
+        writeFileSync(project+'.tmp',JSON.stringify(body)); renameSync(project+'.tmp',project);
+        return send(res,200,{ok:true});
+      }
+      if (!part && req.method === 'DELETE') {
+        rmSync(media);rmSync(meta,{force:true});rmSync(project,{force:true});
+        return send(res,200,{ok:true});
+      }
+    }
     if (req.method === 'GET' && url.pathname === '/health') {
       const [y, f] = await Promise.all([run(YTDLP, ['--version']), run(FFMPEG, ['-version'])]);
       return send(res, 200, { ok: true, ytDlp: y.code === 0 ? y.out.trim() : null, ffmpeg: f.code === 0 });

@@ -38,19 +38,24 @@ export interface Job {
   progress: number;
   error?: string;
   filename?: string;
+  libraryId?: string;
 }
 
 export async function rip(url: string, bitrate: 128 | 192, onJob: (j: Job) => void, signal?: AbortSignal): Promise<File> {
   const { id } = await (await call('/rip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, bitrate }) })).json();
+  let savedLibraryId: string | undefined;
   for (;;) {
     if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
     const job: Job = await (await call(`/jobs/${id}`)).json();
     onJob(job);
+    savedLibraryId = job.libraryId;
     if (job.status === 'error') throw new Error(job.error ?? 'Rip failed');
     if (job.status === 'done') break;
     await new Promise((r) => setTimeout(r, 1000));
   }
   const res = await call(`/jobs/${id}/file`);
   const name = decodeURIComponent(res.headers.get('x-filename') ?? 'download.mp3');
-  return new File([await res.blob()], name, { type: 'audio/mpeg' });
+  const file = new File([await res.blob()], name, { type: 'audio/mpeg' });
+  (file as File & { libraryId?: string }).libraryId = savedLibraryId;
+  return file;
 }

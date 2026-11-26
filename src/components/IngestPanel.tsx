@@ -5,6 +5,7 @@ import { uid } from '../types';
 import { probe } from '../lib/audio/ffmpeg';
 import { cleanTitle, fmt, stem } from '../lib/time';
 import * as helper from '../lib/helper';
+import { uploadLibraryFile } from './LibraryPanel';
 
 const AUDIO_EXT = /\.(mp3|m4a|m4b|aac|flac|wav|ogg|opus|mp4)$/i;
 
@@ -22,9 +23,17 @@ export function IngestPanel({ onProject }: { onProject: (p: Project) => void }) 
       if (files.length === 1) {
         const f = files[0];
         setBusy('Reading file (first run downloads the audio engine, ~30 MB)…');
+        let libraryId=(f as File & {libraryId?:string}).libraryId;
+        if(!libraryId){
+          setBusy('Saving audio to your server…');
+          try { libraryId=(await uploadLibraryFile(f)).id; }
+          catch(e) { setError('Could not save permanently: '+String(e)); }
+        }
+        setBusy('Reading chapters…');
         const info = await probe(f).catch(() => null);
         const chapters = info?.chapters.filter((c) => c.end - c.start > 1) ?? [];
         onProject({
+          libraryId,
           title: info?.album || info?.title || stem(f.name),
           artist: info?.artist ?? '',
           source: f,

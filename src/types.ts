@@ -12,6 +12,7 @@ export interface Track {
 }
 
 export interface Project {
+  libraryId?: string;
   title: string;
   artist: string;
   /** Source mode: one long file split by markers. */

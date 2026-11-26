@@ -7,6 +7,10 @@ services:
     build: .
     restart: unless-stopped
     env_file: .env
+    volumes:
+      - ./library:/data/library
+    environment:
+      LIBRARY_DIR: /data/library
     ports:
       - "127.0.0.1:8787:8787" # this machine only; phones come in through the tunnel
 
