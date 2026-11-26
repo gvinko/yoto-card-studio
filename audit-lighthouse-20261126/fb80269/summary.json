@@ -1,0 +1,121 @@
+{
+  "desktop": {
+    "runs": 1,
+    "scores": {
+      "performance": 100,
+      "accessibility": 90,
+      "best-practices": 100,
+      "seo": 82
+    },
+    "metrics": {
+      "first-contentful-paint": "0.4 s",
+      "largest-contentful-paint": "0.4 s",
+      "total-blocking-time": "0 ms",
+      "cumulative-layout-shift": "0",
+      "speed-index": "0.4 s"
+    },
+    "failing": {
+      "performance": [],
+      "accessibility": [
+        {
+          "id": "select-name",
+          "weight": 7,
+          "score": 0,
+          "display": ""
+        },
+        {
+          "id": "heading-order",
+          "weight": 3,
+          "score": 0,
+          "display": ""
+        }
+      ],
+      "best-practices": [],
+      "seo": [
+        {
+          "id": "meta-description",
+          "weight": 1,
+          "score": 0,
+          "display": ""
+        },
+        {
+          "id": "robots-txt",
+          "weight": 1,
+          "score": 0,
+          "display": "16 errors found"
+        }
+      ]
+    },
+    "finalUrl": "http://localhost:4173/",
+    "runtimeError": null
+  },
+  "mobile": {
+    "runs": 3,
+    "scores": {
+      "performance": 99,
+      "accessibility": 83,
+      "best-practices": 100,
+      "seo": 82
+    },
+    "metrics": {
+      "first-contentful-paint": "1.7 s",
+      "largest-contentful-paint": "1.7 s",
+      "total-blocking-time": "0 ms",
+      "cumulative-layout-shift": "0",
+      "speed-index": "1.7 s"
+    },
+    "failing": {
+      "performance": [
+        {
+          "id": "first-contentful-paint",
+          "weight": 10,
+          "score": 0.93,
+          "display": "1.7 s"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "weight": 25,
+          "score": 0.99,
+          "display": "1.7 s"
+        }
+      ],
+      "accessibility": [
+        {
+          "id": "color-contrast",
+          "weight": 7,
+          "score": 0,
+          "display": ""
+        },
+        {
+          "id": "select-name",
+          "weight": 7,
+          "score": 0,
+          "display": ""
+        },
+        {
+          "id": "heading-order",
+          "weight": 3,
+          "score": 0,
+          "display": ""
+        }
+      ],
+      "best-practices": [],
+      "seo": [
+        {
+          "id": "meta-description",
+          "weight": 1,
+          "score": 0,
+          "display": ""
+        },
+        {
+          "id": "robots-txt",
+          "weight": 1,
+          "score": 0,
+          "display": "16 errors found"
+        }
+      ]
+    },
+    "finalUrl": "http://localhost:4173/",
+    "runtimeError": null
+  }
+}

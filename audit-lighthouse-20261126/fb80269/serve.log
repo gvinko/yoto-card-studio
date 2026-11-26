@@ -1,0 +1,101 @@
+ INFO  Accepting connections at http://localhost:4173
+ HTTP  11/26/2026 12:59:28 AM ::1 GET /
+ HTTP  11/26/2026 12:59:28 AM ::1 Returned 200 in 14 ms
+ HTTP  11/26/2026 12:59:28 AM ::1 GET /
+ HTTP  11/26/2026 12:59:28 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /assets/index-DWCBsySv.js
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 3 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /sw.js
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 12:59:50 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 12:59:50 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 12:59:52 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 12:59:52 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 12:59:52 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 12:59:52 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 12:59:53 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 12:59:53 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 12:59:53 AM ::1 GET /sw.js
+ HTTP  11/26/2026 12:59:53 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 12:59:54 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 12:59:54 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /assets/index-DWCBsySv.js
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:01 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:01 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:03 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:03 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:03 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:03 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:03 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:00:03 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:03 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:03 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:05 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:05 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /assets/index-DWCBsySv.js
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:12 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:12 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:14 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:14 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:14 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:14 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:14 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:00:14 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:14 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:14 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:16 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:16 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /assets/index-DWCBsySv.js
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:00:22 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:22 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:25 AM ::1 GET /assets/index-C_QuVYT1.css
+ HTTP  11/26/2026 1:00:25 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:00:25 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:00:25 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:25 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:00:25 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:00:25 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:00:25 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:00:27 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:00:27 AM ::1 Returned 304 in 0 ms
