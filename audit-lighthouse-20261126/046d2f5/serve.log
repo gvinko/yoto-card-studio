@@ -1,0 +1,101 @@
+ INFO  Accepting connections at http://localhost:4173
+ HTTP  11/26/2026 1:09:21 AM ::1 GET /
+ HTTP  11/26/2026 1:09:21 AM ::1 Returned 200 in 11 ms
+ HTTP  11/26/2026 1:09:21 AM ::1 GET /
+ HTTP  11/26/2026 1:09:21 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:47 AM ::1 GET /
+ HTTP  11/26/2026 1:09:47 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /assets/index-C4H34Lib.js
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 200 in 3 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 200 in 3 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:48 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:09:48 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:09:51 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:09:51 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:09:51 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:09:51 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:09:51 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:09:51 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:51 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:09:51 AM ::1 Returned 304 in 2 ms
+ HTTP  11/26/2026 1:09:52 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:09:52 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /assets/index-C4H34Lib.js
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:09:59 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:09:59 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:01 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:10:01 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:10:01 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:01 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:02 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:10:02 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:02 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:10:02 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:10:03 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:03 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 2 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /assets/index-C4H34Lib.js
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:10 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:10 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:12 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:10:12 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:10:12 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:12 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:10:12 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:10:12 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:12 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:10:12 AM ::1 Returned 304 in 0 ms
+ HTTP  11/26/2026 1:10:14 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:14 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:20 AM ::1 GET /
+ HTTP  11/26/2026 1:10:20 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /assets/index-C4H34Lib.js
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 200 in 0 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:21 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:21 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:23 AM ::1 GET /assets/index-Cebkfqzf.css
+ HTTP  11/26/2026 1:10:23 AM ::1 GET /manifest.webmanifest
+ HTTP  11/26/2026 1:10:23 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:23 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:23 AM ::1 GET /robots.txt
+ HTTP  11/26/2026 1:10:23 AM ::1 Returned 200 in 1 ms
+ HTTP  11/26/2026 1:10:23 AM ::1 GET /sw.js
+ HTTP  11/26/2026 1:10:23 AM ::1 Returned 304 in 1 ms
+ HTTP  11/26/2026 1:10:25 AM ::1 GET /icon.svg
+ HTTP  11/26/2026 1:10:25 AM ::1 Returned 304 in 1 ms

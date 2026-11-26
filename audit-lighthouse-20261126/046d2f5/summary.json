@@ -1,0 +1,69 @@
+{
+  "desktop": {
+    "runs": 1,
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "metrics": {
+      "first-contentful-paint": "0.4 s",
+      "largest-contentful-paint": "0.4 s",
+      "total-blocking-time": "0 ms",
+      "cumulative-layout-shift": "0",
+      "speed-index": "0.4 s"
+    },
+    "failing": {
+      "performance": [],
+      "accessibility": [],
+      "best-practices": [],
+      "seo": []
+    },
+    "finalUrl": "http://localhost:4173/",
+    "runtimeError": null
+  },
+  "mobile": {
+    "runs": 3,
+    "scores": {
+      "performance": 99,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "metrics": {
+      "first-contentful-paint": "1.7 s",
+      "largest-contentful-paint": "1.7 s",
+      "total-blocking-time": "70 ms",
+      "cumulative-layout-shift": "0",
+      "speed-index": "1.7 s"
+    },
+    "failing": {
+      "performance": [
+        {
+          "id": "first-contentful-paint",
+          "weight": 10,
+          "score": 0.91,
+          "display": "1.7 s"
+        },
+        {
+          "id": "total-blocking-time",
+          "weight": 30,
+          "score": 0.99,
+          "display": "70 ms"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "weight": 25,
+          "score": 0.99,
+          "display": "1.7 s"
+        }
+      ],
+      "accessibility": [],
+      "best-practices": [],
+      "seo": []
+    },
+    "finalUrl": "http://localhost:4173/",
+    "runtimeError": null
+  }
+}

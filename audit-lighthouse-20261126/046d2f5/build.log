@@ -1,0 +1,16 @@
+
+added 100 packages in 9s
+
+> yoto-card-studio@0.1.0 build
+> tsc --noEmit && vite build
+
+[36mvite v7.3.8 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 1696 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m  0.74 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+[2mdist/[22m[2massets/[22m[32mworker-DYSz7Krg.js  [39m[1m[2m  2.51 kB[22m[1m[22m
+[2mdist/[22m[2massets/[22m[35mindex-Cebkfqzf.css  [39m[1m[2m 32.52 kB[22m[1m[22m[2m │ gzip:   6.24 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-C4H34Lib.js   [39m[1m[2m449.05 kB[22m[1m[22m[2m │ gzip: 141.00 kB[22m
+[32m✓ built in 1.88s[39m
