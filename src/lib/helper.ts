@@ -2,7 +2,7 @@
 // proxy timeouts (e.g. a Cloudflare quick tunnel used from the phone).
 
 const K = { url: 'helper.url', token: 'helper.token' } as const;
-export const getHelper = () => ({ url: (localStorage.getItem(K.url) ?? 'http://localhost:8787').replace(/\/+$/, ''), token: localStorage.getItem(K.token) ?? '' });
+export const getHelper = () => ({ url: (localStorage.getItem(K.url) ?? (location.pathname.startsWith('/studio') ? location.origin : 'http://localhost:8787')).replace(/\/+$/, ''), token: localStorage.getItem(K.token) ?? '' });
 export const setHelper = (url: string, token: string) => {
   localStorage.setItem(K.url, url.trim());
   localStorage.setItem(K.token, token.trim());
