@@ -11,7 +11,7 @@ import { pipeline } from 'node:stream/promises';
 import { spawn } from 'node:child_process';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, copyFileSync, renameSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 
@@ -22,6 +22,7 @@ const YTDLP = process.env.YTDLP ?? 'yt-dlp';
 const FFMPEG = process.env.FFMPEG ?? 'ffmpeg';
 const WORK = join(tmpdir(), 'yoto-card-studio');
 const LIBRARY = process.env.LIBRARY_DIR ?? join(HERE, 'library');
+const STATIC_DIR = process.env.STATIC_DIR || '';
 mkdirSync(LIBRARY, { recursive: true });
 const JOB_TTL = 60 * 60e3;
 
@@ -107,7 +108,7 @@ async function info(url) {
 }
 
 function listLibrary() {
-  return readdirSync(LIBRARY).filter(n => /^[a-f0-9]{16}\.mp3$/.test(n)).map(n => {
+  return readdirSync(LIBRARY).filter(n => /^[a-f0-9]{16}\.(mp3|m4a|m4b|aac|flac|wav|ogg|opus)$/i.test(n)).map(n => {
     const id = n.slice(0,16); const meta = join(LIBRARY, id + '.json');
     const m = existsSync(meta) ? JSON.parse(readFileSync(meta,'utf8')) : {};
     return { id, name: m.name || n, size: statSync(join(LIBRARY,n)).size, created: m.created || '' };
@@ -177,6 +178,17 @@ const server = createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
   res.setHeader('Access-Control-Expose-Headers', 'x-filename, content-length');
   if (req.method === 'OPTIONS') return send(res, 204, '');
+  const staticPath = new URL(req.url ?? '/', 'http://x').pathname;
+  if (req.method === 'GET' && STATIC_DIR && (staticPath === '/studio' || staticPath.startsWith('/studio/'))) {
+    const rel = staticPath === '/studio' || staticPath === '/studio/' ? 'index.html' : staticPath.slice('/studio/'.length);
+    const safe = normalize(rel).replace(/^\/+/, '');
+    if (safe.startsWith('..') || safe.includes('\\')) return send(res, 403, 'Forbidden');
+    const file = join(STATIC_DIR, safe);
+    const actual = existsSync(file) && statSync(file).isFile() ? file : join(STATIC_DIR, 'index.html');
+    const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.webmanifest':'application/manifest+json','.txt':'text/plain; charset=utf-8','.png':'image/png','.ico':'image/x-icon'}[extname(actual)] || 'application/octet-stream';
+    res.writeHead(200, {'Content-Type':mime,'Cache-Control': actual.endsWith('index.html')?'no-cache':'public, max-age=3600'});
+    return createReadStream(actual).pipe(res);
+  }
   if (!authed(req)) return send(res, 401, 'Wrong or missing helper token (see Settings).');
 
   const url = new URL(req.url ?? '/', 'http://x');
@@ -187,7 +199,7 @@ const server = createServer(async (req, res) => {
       const length = Number(req.headers['content-length'] || 0);
       if (length > 600e6) return send(res,413,'File exceeds 600 MB');
       const id = randomBytes(8).toString('hex');
-      const target = join(LIBRARY,id+'.mp3');
+      const target = join(LIBRARY,id+extname(name).toLowerCase());
       const temp = target+'.partial';
       let size = 0;
       try {
@@ -207,13 +219,14 @@ const server = createServer(async (req, res) => {
     const lm = /^\/library\/([a-f0-9]{16})(\/file|\/project)?$/.exec(url.pathname);
     if (lm) {
       const [,id,part] = lm;
-      const media = join(LIBRARY,id+'.mp3');
+      const media = readdirSync(LIBRARY).find(n => n.startsWith(id+'.') && /\.(mp3|m4a|m4b|aac|flac|wav|ogg|opus)$/i.test(n));
+      const mediaPath = media ? join(LIBRARY,media) : '';
       const meta = join(LIBRARY,id+'.json');
       const project = join(LIBRARY,id+'.project.json');
-      if (!existsSync(media)) return send(res,404,'Not found');
+      if (!mediaPath || !existsSync(mediaPath)) return send(res,404,'Not found');
       if (req.method === 'GET' && part === '/file') {
-        res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':statSync(media).size,'x-filename':encodeURIComponent(JSON.parse(readFileSync(meta,'utf8')).name)});
-        return createReadStream(media).pipe(res);
+        res.writeHead(200,{'Content-Type':({'mp3':'audio/mpeg','m4a':'audio/mp4','m4b':'audio/mp4','aac':'audio/aac','flac':'audio/flac','wav':'audio/wav','ogg':'audio/ogg','opus':'audio/ogg'}[extname(mediaPath).slice(1)]||'application/octet-stream'),'Content-Length':statSync(mediaPath).size,'x-filename':encodeURIComponent(JSON.parse(readFileSync(meta,'utf8')).name)});
+        return createReadStream(mediaPath).pipe(res);
       }
       if (part === '/project' && req.method === 'GET') return send(res,200,existsSync(project)?JSON.parse(readFileSync(project,'utf8')):null);
       if (part === '/project' && req.method === 'PUT') {
@@ -223,7 +236,7 @@ const server = createServer(async (req, res) => {
         return send(res,200,{ok:true});
       }
       if (!part && req.method === 'DELETE') {
-        rmSync(media);rmSync(meta,{force:true});rmSync(project,{force:true});
+        rmSync(mediaPath);rmSync(meta,{force:true});rmSync(project,{force:true});
         return send(res,200,{ok:true});
       }
     }

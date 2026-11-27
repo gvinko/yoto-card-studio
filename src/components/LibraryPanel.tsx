@@ -15,7 +15,7 @@ export const getLibrary=async():Promise<LibraryItem[]> => (await api('/library')
 export const getLibraryFile=async(id:string):Promise<File> => {
  const r=await api('/library/'+id+'/file');
  const name=decodeURIComponent(r.headers.get('x-filename')||'audio.mp3');
- return new File([await r.blob()],name,{type:'audio/mpeg'});
+ return new File([await r.blob()],name,{type:r.headers.get('Content-Type')||'application/octet-stream'});
 };
 export const loadProject=async(id:string) => (await api('/library/'+id+'/project')).json();
 export const saveProject=async(id:string,p:unknown) => api('/library/'+id+'/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});

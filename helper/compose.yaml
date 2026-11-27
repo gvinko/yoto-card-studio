@@ -9,8 +9,10 @@ services:
     env_file: .env
     volumes:
       - ./library:/data/library
+      - ../dist:/app/public:ro
     environment:
       LIBRARY_DIR: /data/library
+      STATIC_DIR: /app/public
     ports:
       - "127.0.0.1:8787:8787" # this machine only; phones come in through the tunnel
 
