@@ -17,14 +17,26 @@ export const getLibraryFile=async(id:string):Promise<File> => {
  const name=decodeURIComponent(r.headers.get('x-filename')||'audio.mp3');
  return new File([await r.blob()],name,{type:r.headers.get('Content-Type')||'application/octet-stream'});
 };
-export const loadProject=async(id:string) => (await api('/library/'+id+'/project')).json();
+export const loadProject=async(id:string) => {
+ for(let attempt=0;attempt<3;attempt++) {
+  try {
+   const response=await api('/library/'+id+'/project');
+   const body=await response.text();
+   if(!body.trim()) throw new Error('Empty chapter project response');
+   return JSON.parse(body);
+  } catch(error) {
+   if(attempt===2) throw new Error('Could not load saved chapters after 3 attempts: '+String(error));
+   await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
+  }
+ }
+};
 export const saveProject=async(id:string,p:unknown) => api('/library/'+id+'/project',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
 export const removeLibraryItem=async(id:string) => api('/library/'+id,{method:'DELETE'});
 export function LibraryPanel({onOpen}:{onOpen:(id:string,file:File)=>Promise<void>}) {
  const [items,setItems]=useState<LibraryItem[]>([]);
  const [error,setError]=useState('');
  const [busy,setBusy]=useState('');
- const refresh=()=>getLibrary().then(setItems).catch(e=>setError(String(e)));
+ const refresh=()=>getLibrary().then(data=>{setItems(data);setError('')}).catch(e=>setError(String(e)));
  useEffect(()=>{refresh()},[]);
  return <section className="space-y-4">
  <div className="flex items-center justify-between"><h2 className="text-lg font-semibold">Saved audio</h2><button className="btn" onClick={refresh}>Refresh</button></div>
