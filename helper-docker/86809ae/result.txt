@@ -2,7 +2,7 @@ health: {"ok":true,"ytDlp":"2026.11.23","ffmpeg":true}
 no-token status: 401
 runs as: node
 image size: 1.06GB
-idle memory: 16.86MiB / 15.33GiB
+idle memory: 16.95MiB / 15.61GiB
 helper-1  | 
 helper-1  |   Yoto Card Studio helper on http://localhost:8787
 helper-1  |   Token: ci-test-token
