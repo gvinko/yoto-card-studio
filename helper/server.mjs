@@ -173,7 +173,7 @@ setInterval(() => {
 const server = createServer(async (req, res) => {
   // CORS + Chrome Private Network Access: the PWA is served from another origin.
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'x-helper-token, content-type');
+  res.setHeader('Access-Control-Allow-Headers', 'x-helper-token, x-audio-filename, content-type');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
   res.setHeader('Access-Control-Expose-Headers', 'x-filename, content-length');
